@@ -1,0 +1,43 @@
+# default config.yml
+
+# localized language support
+language: en-US
+
+# worlds where ALL checks are skipped
+disabled-worlds:
+  - disabled-world
+  - another-disabled-world
+  
+# world specific settings
+# note that all settings default to true, so you only need world specific settings that are false
+worlds:
+  world:
+    layer-zero-protect: true
+    blacklist-enabled: true
+    prevent-pickup: true
+    prevent-drops: true
+    prevent-deathdrops: true
+    prevent-container-access: true
+  creativeworld:
+    prevent-container-access: false
+    blacklist-enabled: false
+
+# Destroy item on drop
+destroy-on-drop: true
+
+# number of seconds to wait before repeating prevent-pickup message
+pickup-notify-interval: 20
+
+# play sound when action is denied
+play-sound: true
+
+# items that can not be placed in creative mode
+blacklist:
+  - IRON_ORE
+  - GOLD_ORE
+  - EMERALD_ORE
+  - DIAMOND_ORE
+  - IRON_BLOCK
+  - GOLD_BLOCK
+  - EMERALD_BLOCK
+  - DIAMOND_BLOCK

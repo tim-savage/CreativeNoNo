@@ -1,0 +1,29 @@
+# Custom Messages
+#
+# Variable substitutions:
+# %itemmaterial%        Item material
+# %playername%          Player's name
+# %playernickname%      Player's nickname
+# %playerdisplayname%   Player's display name, including prefix/suffix
+# %worldname%           World name that player is in
+
+messages:
+  blacklist:
+    enabled: true
+    string: "&bNo se le permite a colocar %itemmaterial% en el modo creativo."
+  layer-zero-protect:
+    enabled: true
+    string: "&bNo se le permite romper los bloques en la capa 0!"
+  prevent-drops:
+    enabled: true
+    string: "&bUsted no puede colocar elementos en el modo creativo. Arrastre en tu inventario de quitar."
+  destroy-on-drop:
+    enabled: true
+    string: "&bUsted no puede colocar elementos en el modo creativo. Artículo destruido."
+  prevent-pickup:
+    enabled: true
+    string: "&bNo se puede recoger objetos en el modo creativo."
+  prevent-container-access:
+    enabled: true
+    string: "&bNo puede acceder a los contenedores en el modo creativo."
+

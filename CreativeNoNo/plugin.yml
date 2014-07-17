@@ -1,0 +1,52 @@
+name: CreativeNoNo
+main: com.winterhaven_mc.creativenono.CreativeNoNoMain
+author: Tim Savage
+version: 1.0-beta
+
+commands:
+   nono:
+      description: CreativeNoNo command
+      usage: /nono reload
+      permission: creativenono.admin
+      permission-message: You don't have permission for that command.
+
+permissions:
+    creativenono.bypass.*:
+        description: Bypass all checks
+        default: op
+        children:
+            creativenono.bypass.blacklist: true
+            creativenono.bypass.containers: true
+            creativenono.bypass.deathdrops: true
+            creativenono.bypass.drops: true
+            creativenono.bypass.layerzero: true
+
+    creativenono.bypass.blacklist:
+        description: Allow placing restricted blocks in creative mode
+        default: false
+
+    creativenono.bypass.containers:
+        description: Allow container access in creative mode
+        default: false
+
+    creativenono.bypass.deathdrops:
+        description: Allow dropping items on death in creative mode
+        default: false
+
+    creativenono.bypass.drops:
+        description: Allow dropping items in creative mode
+        default: false
+
+    creativenono.bypass.layerzero:
+        description: Allow breaking blocks at layer 0
+        default: false
+
+    creativenono.admin:
+        description: Allow all CreativeNoNo admin commands
+        default: op
+        children:
+            creativenono.reload: true
+
+    creativenono.reload:
+        description: Allow reloading CreativeNoNo config file
+        default: op
