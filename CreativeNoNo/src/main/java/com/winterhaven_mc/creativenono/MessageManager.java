@@ -27,13 +27,13 @@ public class MessageManager {
 		// get configured language
 		String language = plugin.getConfig().getString("language","en-US");
 		
-		if (!new File(plugin.getDataFolder() + "/language/" + language + "/messages.yml").exists()) {
+		if (!new File(plugin.getDataFolder() + "/language/" + language + ".yml").exists()) {
 			plugin.getLogger().info("Language file for " + language + " not found. Defaulting to en-US.");
 			language = "en-US";
 		}
 		
 		// instantiate custom configuration manager
-		messages = new ConfigAccessor(plugin, "language/" + language + "/messages.yml");
+		messages = new ConfigAccessor(plugin, "language/" + language + ".yml");
 		
 	}
 	
@@ -67,18 +67,30 @@ public class MessageManager {
 	}
 	
 	
+	/**
+	 * Install localization files from jar
+	 * @param filelist List of language files to install
+	 */
 	private void installLocalizationFiles(String[] filelist) {
 	
 		for (String filename : filelist) {
-			if (!new File(plugin.getDataFolder() + "/language/" + filename + "/messages.yml").exists()) {
-				this.plugin.saveResource("language/" + filename + "/messages.yml",false);
+
+			// copy file from jar if file does not exist
+			if (!new File(plugin.getDataFolder() + "/language/" + filename + ".yml").exists()) {
+				this.plugin.saveResource("language/" + filename + ".yml",false);
+			
+				// write file installation message to log
 				plugin.getLogger().info("Installed localization files for " + filename + ".");
 			}
 		}
 	}
+
 	
-	public void reloadMessages() {
-		messages.reloadConfig();
-	}
+	/**
+	 * Reload localized messages
+	 */
+    public void reloadMessages() {
+        messages.reloadConfig();
+    }
 
 }
