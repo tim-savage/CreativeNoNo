@@ -1,6 +1,5 @@
 name: CreativeNoNo
-main: com.winterhaven_mc.creativenono.CreativeNoNoMain
-author: Tim Savage
+main: com.winterhaven_mc.creativenono.PluginMainr: Tim Savage
 version: 1.0-beta
 
 commands:

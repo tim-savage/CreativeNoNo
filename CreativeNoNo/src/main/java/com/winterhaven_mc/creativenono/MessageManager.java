@@ -1,22 +1,22 @@
 package com.winterhaven_mc.creativenono;
 
-import java.io.File;
-
+import com.winterhaven_mc.util.ConfigAccessor;
 import org.bukkit.ChatColor;
 import org.bukkit.entity.Player;
 
-public class MessageManager {
+import java.io.File;
+
+class MessageManager {
 	
-	private final CreativeNoNoMain plugin;
+	private final PluginMain plugin;
 	private ConfigAccessor messages;
 	
 	/**
-	 * constructor method for <code>MessageManager</code>
+	 * constructor method for MessageManager class
 	 * 
-	 * @param	plugin		A reference to this plugin's main class
-	 * @see		com.winterhaven_mc.spawnstar.SpawnStarMain
+	 * @param	plugin		reference to main class
 	 */
-	public MessageManager(CreativeNoNoMain plugin) {
+	MessageManager(PluginMain plugin) {
 
 		this.plugin = plugin;
 		
@@ -42,7 +42,7 @@ public class MessageManager {
 	 * @param player		Player to message
 	 * @param messageID		Identifier of message to send form messages.yml
 	 */
-	public void sendPlayerMessage(Player player, String messageID) {
+	void sendPlayerMessage(Player player, String messageID) {
 
 		if (messages.getConfig().getBoolean("messages." + messageID + ".enabled",false)) {
 			String message = messages.getConfig().getString("messages." + messageID + ".string");
@@ -89,7 +89,7 @@ public class MessageManager {
 	/**
 	 * Reload localized messages
 	 */
-    public void reloadMessages() {
+    void reloadMessages() {
         messages.reloadConfig();
     }
 

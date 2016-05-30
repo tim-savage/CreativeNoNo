@@ -1,9 +1,5 @@
 package com.winterhaven_mc.creativenono;
 
-import java.util.HashMap;
-import java.util.List;
-import java.util.UUID;
-
 import org.bukkit.GameMode;
 import org.bukkit.Material;
 import org.bukkit.Sound;
@@ -24,6 +20,10 @@ import org.bukkit.event.player.PlayerPickupItemEvent;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.scheduler.BukkitRunnable;
 
+import java.util.*;
+
+import static org.bukkit.Material.*;
+
 
 /**
  * Implements event listener for <code>CreativeNoNo</code> events.
@@ -32,18 +32,38 @@ import org.bukkit.scheduler.BukkitRunnable;
  * @version		1.0
  *  
  */
-public class EventListener implements Listener {
+class EventListener implements Listener {
 
-	private CreativeNoNoMain plugin;
+	private PluginMain plugin;
 	
-	private HashMap<UUID,Boolean> pickupnotified = new HashMap<UUID, Boolean>();
+	private HashMap<UUID,Boolean> pickupNotified = new HashMap<UUID, Boolean>();
+
+	// set of container materials
+	private final static List<Material> CONTAINER_MATERIALS =
+			Collections.unmodifiableList(new ArrayList<Material>(Arrays.asList(
+				CHEST,
+				ENDER_CHEST,
+				DISPENSER,
+				DROPPER,
+				HOPPER,
+				TRAPPED_CHEST,
+				FURNACE,
+				ENCHANTMENT_TABLE,
+				ANVIL,
+				STORAGE_MINECART,
+				HOPPER_MINECART,
+				POWERED_MINECART,
+				BEACON,
+				COMMAND,
+				BREWING_STAND )));
+
 
 	/**
 	 * constructor method for <code>EventListener</code> class
 	 * 
 	 * @param	plugin		A reference to this plugin's main class
 	 */
-	public EventListener(CreativeNoNoMain plugin) {
+	EventListener(PluginMain plugin) {
 		this.plugin = plugin;
 		plugin.getServer().getPluginManager().registerEvents(this, plugin);
 	}
@@ -51,12 +71,11 @@ public class EventListener implements Listener {
 	/** prevent drops for creative players
 	 * 
 	 * @param	event	PlayerDropItemEvent
-	 * @return	void
 	 */
 	@EventHandler
 	void onPlayerDrop(PlayerDropItemEvent event) {
 
-		final Player player = (Player) event.getPlayer();
+		final Player player = event.getPlayer();
 		final String worldname = player.getWorld().getName();
 
 		if (event.isCancelled()) {
@@ -90,7 +109,6 @@ public class EventListener implements Listener {
 	/** prevent death drops for creative players
 	 * 
 	 * @param	event	PlayerDeathEvent
-	 * @return	void
 	 */
 	@EventHandler
 	void onPlayerDeath(PlayerDeathEvent event) {
@@ -121,7 +139,6 @@ public class EventListener implements Listener {
 	/** prevent item pickup for creative players
 	 * 
 	 * @param	event	PlayerPickupItemEvent
-	 * @return	void
 	 */
 	@EventHandler
 	void onPickup(PlayerPickupItemEvent event) {
@@ -143,15 +160,15 @@ public class EventListener implements Listener {
 			return;
 		}
 		event.setCancelled(true);
-		if (!pickupnotified.containsKey(player.getUniqueId())) {
+		if (!pickupNotified.containsKey(player.getUniqueId())) {
 			plugin.messagemanager.sendPlayerMessage(player,"prevent-pickup");
-			pickupnotified.put(player.getUniqueId(), true);
+			pickupNotified.put(player.getUniqueId(), true);
 
 			new BukkitRunnable() {
 
 				@Override
 				public void run() {
-					pickupnotified.remove(player.getUniqueId());
+					pickupNotified.remove(player.getUniqueId());
 				}
 
 			}.runTaskLater(this.plugin, plugin.getConfig().getInt("pickup-notify-interval",20)*20);
@@ -162,7 +179,6 @@ public class EventListener implements Listener {
 	/** prevent container access for creative players
 	 * 
 	 * @param	event	PlayerInteractEvent
-	 * @return	void
 	 */
 	@EventHandler
 	void onPlayerInteract(PlayerInteractEvent event) {
@@ -227,27 +243,13 @@ public class EventListener implements Listener {
 				event.setCancelled(true);
 				plugin.messagemanager.sendPlayerMessage(player,"prevent-container-access");
 				playDeniedSound(player);
-				return;
 			}
 		}
-		
-//		if (!plugin.getConfig().getBoolean("worlds." + worldname + ".prevent-container-access",true)) {
-//			return;
-//		}
-//		if (player.hasPermission("creativenono.bypass.containers")) {
-//			return;
-//		}
-//		if (event.getAction() == Action.RIGHT_CLICK_BLOCK && isContainerBlock(block.getType())) {
-//			event.setCancelled(true);
-//			plugin.messagemanager.sendPlayerMessage(player,"prevent-container-access");
-//			playDeniedSound(player);
-//		}
 	}
 
 	/** prevent placing blacklisted items by creative players
 	 * 
 	 * @param	event	BlockPlaceEvent
-	 * @return	void
 	 */
 	@EventHandler
 	void onBlockPlace(BlockPlaceEvent event) {
@@ -297,7 +299,7 @@ public class EventListener implements Listener {
 		if (worldDisabled(worldname)) {
 			return;
 		}
-		if (plugin.getConfig().getBoolean("worlds." + worldname + ".layer-zero-protect",true) != true) {
+		if (!plugin.getConfig().getBoolean("worlds." + worldname + ".layer-zero-protect", true)) {
 			return;
 		}
 		if (player.hasPermission("creativenono.bypass.layerzero")) {
@@ -314,7 +316,7 @@ public class EventListener implements Listener {
 	
 	/**
 	 * Limit the number of creatures that can be spawned with spawn eggs in an area
-	 * @param event
+	 * @param event		CreatureSpawnEvent
 	 */
 	@EventHandler
 	void onCreatureSpawn(CreatureSpawnEvent event) {
@@ -357,27 +359,10 @@ public class EventListener implements Listener {
 	/** check if block is a container
 	 * 
 	 * @param	material	material to check if container block
-	 * @return	boolean
+	 * @return	{@code true} if material is a container material, {@code false} if not
 	 */
 	private boolean isContainerBlock(Material material) {
-		switch(material) {
-		case CHEST: return true;
-		case ENDER_CHEST: return true;
-		case DISPENSER: return true;
-		case DROPPER: return true;
-		case HOPPER: return true;
-		case TRAPPED_CHEST: return true;
-		case FURNACE: return true;
-		case ENCHANTMENT_TABLE: return true;
-		case ANVIL: return true;
-		case STORAGE_MINECART: return true;
-		case HOPPER_MINECART: return true;
-		case POWERED_MINECART: return true;
-		case BEACON: return true;
-		case COMMAND: return true;
-		case BREWING_STAND: return true;
-		default: return false;
-		}
+		return CONTAINER_MATERIALS.contains(material);
 	}
 
 	/** check if block is blacklisted
@@ -387,10 +372,7 @@ public class EventListener implements Listener {
 	 */
 	private boolean blockBlacklisted(Material material) {
 		List<String> blacklist = plugin.getConfig().getStringList("blacklist");
-		if (blacklist.contains(material.toString())) {
-			return true;
-		}
-		return false;
+		return blacklist.contains(material.toString());
 	}
 	
 	/** check if world is in disabled list
@@ -400,10 +382,7 @@ public class EventListener implements Listener {
 	 */
 	private boolean worldDisabled(String worldname) {
 		List<String> disabledworlds = plugin.getConfig().getStringList("disabled-worlds");
-		if (disabledworlds.contains(worldname)) {
-			return true;
-		}
-		return false;
+		return disabledworlds.contains(worldname);
 	}
 	
 	private void playDeniedSound(Player player) {
