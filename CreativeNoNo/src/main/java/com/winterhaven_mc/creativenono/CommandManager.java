@@ -44,17 +44,15 @@ class CommandManager implements CommandExecutor {
 		// reload command
 		if (subcmd.equalsIgnoreCase("reload") && sender.hasPermission("creativenono.reload")) {
 
-	    	String original_language = plugin.getConfig().getString("language", "en-US");
-
+			// reload config
 			plugin.reloadConfig();
 
-			if (!original_language.equals(plugin.getConfig().getString("language","en-US"))) {
-				plugin.messagemanager = new MessageManager(plugin);
-			}
-			else {
-				plugin.messagemanager.reloadMessages();
-			}
+			// reload messages
+			plugin.messageManager.reload();
+
+			// send player message
 			sender.sendMessage("CreativeNoNo config reloaded!");
+
 			return true;
 		}
 		return false;

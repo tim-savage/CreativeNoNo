@@ -98,11 +98,11 @@ class EventListener implements Listener {
 			if (plugin.getConfig().getBoolean("play-sound",true)) {
 				player.playSound(player.getLocation(), Sound.ENTITY_ITEM_BREAK, 1, 1);
 			}
-			plugin.messagemanager.sendPlayerMessage(player,"destroy-on-drop");
+			plugin.messageManager.sendPlayerMessage(player,"destroy-on-drop");
 			return;
 		}
 		event.setCancelled(true);
-		plugin.messagemanager.sendPlayerMessage(player,"prevent-drops");
+		plugin.messageManager.sendPlayerMessage(player,"prevent-drops");
 		playDeniedSound(player);			
 	}
 
@@ -161,7 +161,7 @@ class EventListener implements Listener {
 		}
 		event.setCancelled(true);
 		if (!pickupNotified.containsKey(player.getUniqueId())) {
-			plugin.messagemanager.sendPlayerMessage(player,"prevent-pickup");
+			plugin.messageManager.sendPlayerMessage(player,"prevent-pickup");
 			pickupNotified.put(player.getUniqueId(), true);
 
 			new BukkitRunnable() {
@@ -218,7 +218,7 @@ class EventListener implements Listener {
 			
 			// cancel event, send player message and return
 			event.setCancelled(true);
-			plugin.messagemanager.sendPlayerMessage(player, "prevent-spawn-eggs");
+			plugin.messageManager.sendPlayerMessage(player, "prevent-spawn-eggs");
 			playDeniedSound(player);
 			return;
 		}
@@ -241,7 +241,7 @@ class EventListener implements Listener {
 				
 				// cancel event, send player message and return
 				event.setCancelled(true);
-				plugin.messagemanager.sendPlayerMessage(player,"prevent-container-access");
+				plugin.messageManager.sendPlayerMessage(player,"prevent-container-access");
 				playDeniedSound(player);
 			}
 		}
@@ -275,7 +275,7 @@ class EventListener implements Listener {
 		}
 		if (blockBlacklisted(material)) {
 			event.setCancelled(true);
-			plugin.messagemanager.sendPlayerMessage(player,"blacklist");
+			plugin.messageManager.sendPlayerMessage(player,"blacklist");
 			playDeniedSound(player);
 		}
 	}
@@ -307,7 +307,7 @@ class EventListener implements Listener {
 		}
 		if (event.getBlock().getLocation().getBlockY() == 0) {
 			event.setCancelled(true);
-			plugin.messagemanager.sendPlayerMessage(player,"layer-zero-protect");
+			plugin.messageManager.sendPlayerMessage(player,"layer-zero-protect");
 			playDeniedSound(player);
 		}
 	}
@@ -392,4 +392,3 @@ class EventListener implements Listener {
 	}
 	
 }
-

@@ -1,5 +1,6 @@
 package com.winterhaven_mc.creativenono;
 
+import com.winterhaven_mc.util.WorldManager;
 import org.bukkit.plugin.java.JavaPlugin;
 
 
@@ -15,7 +16,9 @@ final class PluginMain extends JavaPlugin {
 	@SuppressWarnings("unused")
 	public boolean debug = getConfig().getBoolean("debug");
 
-	MessageManager messagemanager;
+	MessageManager messageManager;
+	WorldManager worldManager;
+
 
 	@Override
 	public void onEnable() {
@@ -29,8 +32,11 @@ final class PluginMain extends JavaPlugin {
 		// instantiate command handler
 		new CommandManager(this);
 
+		// instantiate world manager
+		worldManager = new WorldManager(this);
+
 		// instantiate message manager
-		messagemanager = new MessageManager(this);
+		messageManager = new MessageManager(this);
 		
 	}
 
