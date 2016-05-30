@@ -2,21 +2,26 @@ package com.winterhaven_mc.creativenono;
 
 import java.util.HashMap;
 import java.util.List;
+import java.util.UUID;
 
 import org.bukkit.GameMode;
 import org.bukkit.Material;
 import org.bukkit.Sound;
 import org.bukkit.block.Block;
+import org.bukkit.entity.Entity;
+import org.bukkit.entity.EntityType;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.block.Action;
 import org.bukkit.event.block.BlockBreakEvent;
 import org.bukkit.event.block.BlockPlaceEvent;
+import org.bukkit.event.entity.CreatureSpawnEvent;
 import org.bukkit.event.entity.PlayerDeathEvent;
 import org.bukkit.event.player.PlayerDropItemEvent;
 import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.event.player.PlayerPickupItemEvent;
+import org.bukkit.inventory.ItemStack;
 import org.bukkit.scheduler.BukkitRunnable;
 
 
@@ -26,11 +31,12 @@ import org.bukkit.scheduler.BukkitRunnable;
  * @author      Tim Savage
  * @version		1.0
  *  
- */public class EventListener implements Listener {
+ */
+public class EventListener implements Listener {
 
 	private CreativeNoNoMain plugin;
 	
-	private HashMap<String,Boolean> pickupnotified = new HashMap<String, Boolean>();
+	private HashMap<UUID,Boolean> pickupnotified = new HashMap<UUID, Boolean>();
 
 	/**
 	 * constructor method for <code>EventListener</code> class
@@ -48,7 +54,7 @@ import org.bukkit.scheduler.BukkitRunnable;
 	 * @return	void
 	 */
 	@EventHandler
-	public void onPlayerDrop(PlayerDropItemEvent event) {
+	void onPlayerDrop(PlayerDropItemEvent event) {
 
 		final Player player = (Player) event.getPlayer();
 		final String worldname = player.getWorld().getName();
@@ -65,13 +71,13 @@ import org.bukkit.scheduler.BukkitRunnable;
 		if (!plugin.getConfig().getBoolean("worlds." + worldname + ".prevent-drops",true)) {
 			return;
 		}
-		if (player.hasPermission("creativenono.drops.override")) {
+		if (player.hasPermission("creativenono.bypass.drops")) {
 			return;
 		}
 		if (plugin.getConfig().getBoolean("destroy-on-drop", false)) {
 			event.getItemDrop().remove();
 			if (plugin.getConfig().getBoolean("play-sound",true)) {
-				player.playSound(player.getLocation(), Sound.ITEM_BREAK, 1, 1);
+				player.playSound(player.getLocation(), Sound.ENTITY_ITEM_BREAK, 1, 1);
 			}
 			plugin.messagemanager.sendPlayerMessage(player,"destroy-on-drop");
 			return;
@@ -87,7 +93,7 @@ import org.bukkit.scheduler.BukkitRunnable;
 	 * @return	void
 	 */
 	@EventHandler
-	public void onPlayerDeath(PlayerDeathEvent event) {
+	void onPlayerDeath(PlayerDeathEvent event) {
 		
 		final Player player = event.getEntity();
 		final String worldname = player.getWorld().getName();
@@ -118,7 +124,7 @@ import org.bukkit.scheduler.BukkitRunnable;
 	 * @return	void
 	 */
 	@EventHandler
-	public void onPickup(PlayerPickupItemEvent event) {
+	void onPickup(PlayerPickupItemEvent event) {
 		final Player player = event.getPlayer();
 		final String worldname = player.getWorld().getName();
 		if (event.isCancelled()) {
@@ -137,15 +143,15 @@ import org.bukkit.scheduler.BukkitRunnable;
 			return;
 		}
 		event.setCancelled(true);
-		if (!pickupnotified.containsKey(player.getName())) {
+		if (!pickupnotified.containsKey(player.getUniqueId())) {
 			plugin.messagemanager.sendPlayerMessage(player,"prevent-pickup");
-			pickupnotified.put(player.getName(), true);
+			pickupnotified.put(player.getUniqueId(), true);
 
 			new BukkitRunnable() {
 
 				@Override
 				public void run() {
-					pickupnotified.remove(player.getName());
+					pickupnotified.remove(player.getUniqueId());
 				}
 
 			}.runTaskLater(this.plugin, plugin.getConfig().getInt("pickup-notify-interval",20)*20);
@@ -159,32 +165,83 @@ import org.bukkit.scheduler.BukkitRunnable;
 	 * @return	void
 	 */
 	@EventHandler
-	public void onPlayerInteract(PlayerInteractEvent event) {
+	void onPlayerInteract(PlayerInteractEvent event) {
 		
 		final Player player = event.getPlayer();
-		final String worldname = player.getWorld().getName();
+		final String worldName = player.getWorld().getName();
 		final Block block = event.getClickedBlock();
+		final ItemStack playerItem = event.getItem();
 
-		if (event.isCancelled() || block == null) {
+		// if event is already cancelled, do nothing and return
+		if (event.isCancelled()) {
 			return;
 		}
+		
+		// if player is not in creative mode, do nothing and return
 		if (player.getGameMode() != GameMode.CREATIVE) {
 			return;
 		}
-		if (worldDisabled(worldname)) {
+		
+		// if player world is disabled in config, do nothing and return
+		if (worldDisabled(worldName)) {
 			return;
 		}
-		if (!plugin.getConfig().getBoolean("worlds." + worldname + ".prevent-container-access",true)) {
-			return;
-		}
-		if (player.hasPermission("creativenono.bypass.containers")) {
-			return;
-		}
-		if (event.getAction() == Action.RIGHT_CLICK_BLOCK && isContainerBlock(block.getType())) {
+		
+		// if player item is a spawn egg, check if spawn eggs are disabled in world
+		if (playerItem != null && playerItem.getType().equals(Material.MONSTER_EGG)) {
+			
+			// if spawn eggs are not disabled in world, do nothing and return
+			if (!plugin.getConfig().getBoolean("worlds." + worldName + ".prevent-spawn-eggs",true)) {
+				return;
+			}
+			
+			// if player has override permission, do nothing and return
+			if (player.hasPermission("creativenono.bypass.spawnegg")) {
+				return;
+			}
+			
+			// cancel event, send player message and return
 			event.setCancelled(true);
-			plugin.messagemanager.sendPlayerMessage(player,"prevent-container-access");
+			plugin.messagemanager.sendPlayerMessage(player, "prevent-spawn-eggs");
 			playDeniedSound(player);
+			return;
 		}
+		
+		// if block clicked is a container
+		if (block != null && isContainerBlock(block.getType())) {
+			
+			// if player tried to open container
+			if (event.getAction().equals(Action.RIGHT_CLICK_BLOCK)) {
+				
+				// if creative container access is not disabled in world, do nothing and return
+				if (!plugin.getConfig().getBoolean("worlds." + worldName + ".prevent-container-access",true)) {
+					return;
+				}
+
+				// if player has override permission, do nothing and return
+				if (player.hasPermission("creativenono.bypass.containers")) {
+					return;
+				}
+				
+				// cancel event, send player message and return
+				event.setCancelled(true);
+				plugin.messagemanager.sendPlayerMessage(player,"prevent-container-access");
+				playDeniedSound(player);
+				return;
+			}
+		}
+		
+//		if (!plugin.getConfig().getBoolean("worlds." + worldname + ".prevent-container-access",true)) {
+//			return;
+//		}
+//		if (player.hasPermission("creativenono.bypass.containers")) {
+//			return;
+//		}
+//		if (event.getAction() == Action.RIGHT_CLICK_BLOCK && isContainerBlock(block.getType())) {
+//			event.setCancelled(true);
+//			plugin.messagemanager.sendPlayerMessage(player,"prevent-container-access");
+//			playDeniedSound(player);
+//		}
 	}
 
 	/** prevent placing blacklisted items by creative players
@@ -193,7 +250,7 @@ import org.bukkit.scheduler.BukkitRunnable;
 	 * @return	void
 	 */
 	@EventHandler
-	public void onBlockPlace(BlockPlaceEvent event) {
+	void onBlockPlace(BlockPlaceEvent event) {
 
 		final Player player = event.getPlayer();
 		final String worldname = player.getWorld().getName();
@@ -226,7 +283,7 @@ import org.bukkit.scheduler.BukkitRunnable;
 	 * @param	event	BlockBreakEvent
 	 */
 	@EventHandler
-	public void onBlockBreak(BlockBreakEvent event) {
+	void onBlockBreak(BlockBreakEvent event) {
 		
 		final Player player = event.getPlayer();
 		final String worldname = player.getWorld().getName();
@@ -250,6 +307,50 @@ import org.bukkit.scheduler.BukkitRunnable;
 			event.setCancelled(true);
 			plugin.messagemanager.sendPlayerMessage(player,"layer-zero-protect");
 			playDeniedSound(player);
+		}
+	}
+	
+	
+	
+	/**
+	 * Limit the number of creatures that can be spawned with spawn eggs in an area
+	 * @param event
+	 */
+	@EventHandler
+	void onCreatureSpawn(CreatureSpawnEvent event) {
+		
+		// get spawn event reason
+		CreatureSpawnEvent.SpawnReason reason = event.getSpawnReason();
+		
+		// if creature spawn was not caused by spawn egg, do nothing and return
+		if (!reason.equals(CreatureSpawnEvent.SpawnReason.SPAWNER_EGG)) {
+			return;
+		}
+		
+		// get world
+		String worldName = event.getLocation().getWorld().getName();
+		
+		// if spawn egg limits are not enabled for world, do nothing and return
+		if (!plugin.getConfig().getBoolean("worlds." + worldName + ".limit-spawn-eggs",true)) {
+			return;
+		}
+
+		int radius = plugin.getConfig().getInt("worlds." + worldName + ".spawn-egg-radius",64);
+		int limit = plugin.getConfig().getInt("worlds." + worldName + ".spawn-egg-limit",10);
+		int entityCount = 0;
+		
+		List<Entity> entityList = event.getEntity().getNearbyEntities(radius, radius, radius);
+		
+		EntityType entityType = event.getEntityType();
+		
+		for (Entity entity : entityList) {
+			if (entity.getType().equals(entityType)) {
+				entityCount++;
+			}
+		}
+		
+		if (entityCount >= limit) {
+			event.setCancelled(true);
 		}
 	}
 
@@ -307,7 +408,7 @@ import org.bukkit.scheduler.BukkitRunnable;
 	
 	private void playDeniedSound(Player player) {
 		if (plugin.getConfig().getBoolean("play-sound")) {
-			player.playSound(player.getLocation(), Sound.VILLAGER_NO, 1, 1);
+			player.playSound(player.getLocation(), Sound.ENTITY_VILLAGER_NO, 1, 1);
 		}
 	}
 	

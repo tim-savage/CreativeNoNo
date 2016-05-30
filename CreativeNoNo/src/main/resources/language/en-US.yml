@@ -26,4 +26,7 @@ messages:
   prevent-container-access:
     enabled: true
     string: "&bYou cannot access containers in creative mode."
+  prevent-spawn-eggs:
+    enabled: true
+    string: "&bYou are not allowed to use spawn eggs here."
 

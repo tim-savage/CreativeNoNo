@@ -48,7 +48,7 @@ public class MessageManager {
 			String message = messages.getConfig().getString("messages." + messageID + ".string");
 
 			// strip colorcodes and special characters from variables
-			String itemmaterial = player.getItemInHand().getType().toString().toLowerCase().replace('_', ' ');
+			String itemmaterial = player.getInventory().getItemInMainHand().getType().toString().toLowerCase().replace('_', ' ');
 			String playername = player.getName().replaceAll("&[0-9A-Za-zK-Ok-oRr]", "");
 			String playernickname = player.getPlayerListName().replaceAll("&[0-9A-Za-zK-Ok-oRr]", "");
 			String playerdisplayname = player.getDisplayName();
