@@ -11,7 +11,7 @@ import org.bukkit.plugin.java.JavaPlugin;
  * @author      Tim Savage
  * @version		1.0
  */
-final class PluginMain extends JavaPlugin {
+public final class PluginMain extends JavaPlugin {
 
 	@SuppressWarnings("unused")
 	public boolean debug = getConfig().getBoolean("debug");

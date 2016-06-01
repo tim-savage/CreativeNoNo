@@ -32,10 +32,37 @@
 				</configuration>
 			</plugin>
 
-			<!-- Create Javadoc jar -->
+			<!-- Shade plugin -->
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-shade-plugin</artifactId>
+				<version>2.3</version>
+				<executions>
+					<execution>
+						<phase>package</phase>
+						<goals>
+							<goal>shade</goal>
+						</goals>
+						<configuration>
+							<minimizeJar>true</minimizeJar>
+							<artifactSet>
+								<includes>
+									<include>com.winterhaven-mc:config-accessor-lib</include>
+									<include>com.winterhaven-mc:string-util-lib</include>
+									<include>com.winterhaven-mc:world-manager-lib</include>
+									<include>com.winterhaven-mc:language-manager-lib</include>
+								</includes>
+							</artifactSet>
+						</configuration>
+					</execution>
+				</executions>
+			</plugin>
+
+			<!-- Javadoc plugin -->
+<!--			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-javadoc-plugin</artifactId>
+				<version>2.10.3</version>
 				<executions>
 					<execution>
 						<id>attach-javadocs</id>
@@ -45,11 +72,12 @@
 					</execution>
 				</executions>
 			</plugin>
-
-			<!-- Create Sources jar -->
+-->
+			<!-- Source plugin -->
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-source-plugin</artifactId>
+				<version>3.0.0</version>
 				<executions>
 					<execution>
 						<id>attach-sources</id>
@@ -121,6 +149,11 @@
 		<dependency>
 			<groupId>com.winterhaven-mc</groupId>
 			<artifactId>world-manager-lib</artifactId>
+			<version>1.0.0</version>
+		</dependency>
+		<dependency>
+			<groupId>com.winterhaven-mc</groupId>
+			<artifactId>language-manager-lib</artifactId>
 			<version>1.0.0</version>
 		</dependency>
 	</dependencies>
