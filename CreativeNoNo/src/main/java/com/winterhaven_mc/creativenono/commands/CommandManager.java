@@ -41,10 +41,10 @@ public class CommandManager implements CommandExecutor {
    			return true;
    		}
 
-   		String subcmd = args[0];
+   		String subCommand = args[0];
 
 		// reload command
-		if (subcmd.equalsIgnoreCase("reload") && sender.hasPermission("creativenono.reload")) {
+		if (subCommand.equalsIgnoreCase("reload") && sender.hasPermission("creativenono.reload")) {
 
 			// reload config
 			plugin.reloadConfig();
