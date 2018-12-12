@@ -1,24 +1,26 @@
-package com.winterhaven_mc.creativenono;
+package com.winterhaven_mc.creativenono.commands;
 
+import com.winterhaven_mc.creativenono.PluginMain;
 import org.bukkit.ChatColor;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandExecutor;
 import org.bukkit.command.CommandSender;
 
-class CommandManager implements CommandExecutor {
+
+public class CommandManager implements CommandExecutor {
 
 	// reference to main class
 	private PluginMain plugin;
 	
-	CommandManager(PluginMain plugin) {
+	public CommandManager(PluginMain plugin) {
 
 		// set reference to main class
 		this.plugin = plugin;
 
 		// register this class as command executor for nono command
 		plugin.getCommand("nono").setExecutor(this);
-
 	}
+
 
 	/** command executor for CreativeNoNo
 	 * 

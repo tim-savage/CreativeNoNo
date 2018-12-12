@@ -1,9 +1,12 @@
-package com.winterhaven_mc.creativenono;
+package com.winterhaven_mc.creativenono.listeners;
 
+import com.winterhaven_mc.creativenono.PluginMain;
+import com.winterhaven_mc.creativenono.messages.MessageId;
 import org.bukkit.GameMode;
 import org.bukkit.Material;
 import org.bukkit.Sound;
 import org.bukkit.block.Block;
+import org.bukkit.block.Container;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.EntityType;
 import org.bukkit.entity.Player;
@@ -13,16 +16,14 @@ import org.bukkit.event.block.Action;
 import org.bukkit.event.block.BlockBreakEvent;
 import org.bukkit.event.block.BlockPlaceEvent;
 import org.bukkit.event.entity.CreatureSpawnEvent;
+import org.bukkit.event.entity.EntityPickupItemEvent;
 import org.bukkit.event.entity.PlayerDeathEvent;
 import org.bukkit.event.player.PlayerDropItemEvent;
 import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.event.player.PlayerPickupItemEvent;
-import org.bukkit.inventory.ItemStack;
 import org.bukkit.scheduler.BukkitRunnable;
 
 import java.util.*;
-
-import static org.bukkit.Material.*;
 
 
 /**
@@ -32,30 +33,11 @@ import static org.bukkit.Material.*;
  * @version		1.0
  *  
  */
-class EventListener implements Listener {
+public class EventListener implements Listener {
 
 	private PluginMain plugin;
 	
-	private HashMap<UUID,Boolean> pickupNotified = new HashMap<UUID, Boolean>();
-
-	// set of container materials
-	private final static List<Material> CONTAINER_MATERIALS =
-			Collections.unmodifiableList(new ArrayList<Material>(Arrays.asList(
-				CHEST,
-				ENDER_CHEST,
-				DISPENSER,
-				DROPPER,
-				HOPPER,
-				TRAPPED_CHEST,
-				FURNACE,
-				ENCHANTMENT_TABLE,
-				ANVIL,
-				STORAGE_MINECART,
-				HOPPER_MINECART,
-				POWERED_MINECART,
-				BEACON,
-				COMMAND,
-				BREWING_STAND )));
+	private HashMap<UUID,Boolean> pickupNotified = new HashMap<>();
 
 
 	/**
@@ -63,10 +45,11 @@ class EventListener implements Listener {
 	 * 
 	 * @param	plugin		A reference to this plugin's main class
 	 */
-	EventListener(PluginMain plugin) {
+	public EventListener(PluginMain plugin) {
 		this.plugin = plugin;
 		plugin.getServer().getPluginManager().registerEvents(this, plugin);
 	}
+
 
 	/** prevent drops for creative players
 	 * 
@@ -98,13 +81,14 @@ class EventListener implements Listener {
 			if (plugin.getConfig().getBoolean("play-sound",true)) {
 				player.playSound(player.getLocation(), Sound.ENTITY_ITEM_BREAK, 1, 1);
 			}
-			plugin.messageManager.sendPlayerMessage(player,"destroy-on-drop");
+			plugin.messageManager.sendMessage(player, MessageId.DESTROY_ON_DROP);
 			return;
 		}
 		event.setCancelled(true);
-		plugin.messageManager.sendPlayerMessage(player,"prevent-drops");
+		plugin.messageManager.sendMessage(player,MessageId.PREVENT_DROPS);
 		playDeniedSound(player);			
 	}
+
 
 	/** prevent death drops for creative players
 	 * 
@@ -115,16 +99,20 @@ class EventListener implements Listener {
 		
 		final Player player = event.getEntity();
 		final String worldname = player.getWorld().getName();
-		
+
+		// if player world is not enabled, do nothing and return
+		if (!plugin.worldManager.isEnabled(player.getWorld())) {
+			return;
+		}
+
 		if (player.getGameMode() != GameMode.CREATIVE) {
 			return;
 		}
-		if (worldDisabled(worldname)) {
-			return;
-		}
+
 		if (!plugin.getConfig().getBoolean("worlds." + worldname + ".prevent-deathdrops",true)) {
 			return;
 		}
+
 		if (player.hasPermission("creativenono.deathdrops.bypass")) {
 			return;
 		}
@@ -136,32 +124,55 @@ class EventListener implements Listener {
 		player.getInventory().setBoots(null);
 	}
 
+
 	/** prevent item pickup for creative players
 	 * 
 	 * @param	event	PlayerPickupItemEvent
 	 */
 	@EventHandler
-	void onPickup(PlayerPickupItemEvent event) {
-		final Player player = event.getPlayer();
-		final String worldname = player.getWorld().getName();
+	void onPickup(final EntityPickupItemEvent event) {
+
+		// if event is already cancelled, do nothing and return
 		if (event.isCancelled()) {
 			return;
 		}
+
+		// if event entity is not player, do nothing and return
+		if (!(event.getEntity() instanceof Player)) {
+			return;
+		}
+
+		// cast entity to player
+		final Player player = (Player)event.getEntity();
+
+		// get player world name
+		final String worldName = player.getWorld().getName();
+
+		// if player is not in creative mode, do nothing and return
 		if (player.getGameMode() != GameMode.CREATIVE) {
 			return;
 		}
-		if (worldDisabled(worldname)) {
+
+		// if player world is not enabled, do nothing and return
+		if (!plugin.worldManager.isEnabled(worldName)) {
 			return;
 		}
-		if (!plugin.getConfig().getBoolean("worlds." + worldname + ".prevent-pickup",true)) {
+
+		// if prevent-pickup is not enabled in world specific configuration, do nothing and return
+		if (!plugin.getConfig().getBoolean("worlds." + worldName + ".prevent-pickup")) {
 			return;
 		}
+
+		// if player has bypass permission, do nothing and return
 		if (player.hasPermission("creativenono.pickup.bypass")) {
 			return;
 		}
+
+		// cancel event
 		event.setCancelled(true);
+
 		if (!pickupNotified.containsKey(player.getUniqueId())) {
-			plugin.messageManager.sendPlayerMessage(player,"prevent-pickup");
+			plugin.messageManager.sendMessage(player,MessageId.PREVENT_PICKUP);
 			pickupNotified.put(player.getUniqueId(), true);
 
 			new BukkitRunnable() {
@@ -172,9 +183,9 @@ class EventListener implements Listener {
 				}
 
 			}.runTaskLater(this.plugin, plugin.getConfig().getInt("pickup-notify-interval",20)*20);
-
 		}
 	}
+
 
 	/** prevent container access for creative players
 	 * 
@@ -186,7 +197,7 @@ class EventListener implements Listener {
 		final Player player = event.getPlayer();
 		final String worldName = player.getWorld().getName();
 		final Block block = event.getClickedBlock();
-		final ItemStack playerItem = event.getItem();
+//		final ItemStack playerItem = event.getItem();
 
 		// if event is already cancelled, do nothing and return
 		if (event.isCancelled()) {
@@ -203,28 +214,28 @@ class EventListener implements Listener {
 			return;
 		}
 		
-		// if player item is a spawn egg, check if spawn eggs are disabled in world
-		if (playerItem != null && playerItem.getType().equals(Material.MONSTER_EGG)) {
-			
-			// if spawn eggs are not disabled in world, do nothing and return
-			if (!plugin.getConfig().getBoolean("worlds." + worldName + ".prevent-spawn-eggs",true)) {
-				return;
-			}
-			
-			// if player has override permission, do nothing and return
-			if (player.hasPermission("creativenono.bypass.spawnegg")) {
-				return;
-			}
-			
-			// cancel event, send player message and return
-			event.setCancelled(true);
-			plugin.messageManager.sendPlayerMessage(player, "prevent-spawn-eggs");
-			playDeniedSound(player);
-			return;
-		}
+//		// if player item is a spawn egg, check if spawn eggs are disabled in world
+//		if (playerItem != null && playerItem.getType().equals(Material.MONSTER_EGG)) {
+//
+//			// if spawn eggs are not disabled in world, do nothing and return
+//			if (!plugin.getConfig().getBoolean("worlds." + worldName + ".prevent-spawn-eggs",true)) {
+//				return;
+//			}
+//
+//			// if player has override permission, do nothing and return
+//			if (player.hasPermission("creativenono.bypass.spawnegg")) {
+//				return;
+//			}
+//
+//			// cancel event, send player message and return
+//			event.setCancelled(true);
+//			plugin.messageManager.sendPlayerMessage(player, "prevent-spawn-eggs");
+//			playDeniedSound(player);
+//			return;
+//		}
 		
 		// if block clicked is a container
-		if (block != null && isContainerBlock(block.getType())) {
+		if (block != null && isContainerBlock(block)) {
 			
 			// if player tried to open container
 			if (event.getAction().equals(Action.RIGHT_CLICK_BLOCK)) {
@@ -241,11 +252,12 @@ class EventListener implements Listener {
 				
 				// cancel event, send player message and return
 				event.setCancelled(true);
-				plugin.messageManager.sendPlayerMessage(player,"prevent-container-access");
+				plugin.messageManager.sendMessage(player,MessageId.PREVENT_CONTAINER_ACCESS);
 				playDeniedSound(player);
 			}
 		}
 	}
+
 
 	/** prevent placing blacklisted items by creative players
 	 * 
@@ -275,10 +287,11 @@ class EventListener implements Listener {
 		}
 		if (blockBlacklisted(material)) {
 			event.setCancelled(true);
-			plugin.messageManager.sendPlayerMessage(player,"blacklist");
+			plugin.messageManager.sendMessage(player, MessageId.BLACKLIST, material);
 			playDeniedSound(player);
 		}
 	}
+
 
 	/** prevent breaking blocks at layer 0
 	 * 
@@ -307,7 +320,7 @@ class EventListener implements Listener {
 		}
 		if (event.getBlock().getLocation().getBlockY() == 0) {
 			event.setCancelled(true);
-			plugin.messageManager.sendPlayerMessage(player,"layer-zero-protect");
+			plugin.messageManager.sendMessage(player,MessageId.LAYER_ZERO_PROTECT);
 			playDeniedSound(player);
 		}
 	}
@@ -356,14 +369,16 @@ class EventListener implements Listener {
 		}
 	}
 
+
 	/** check if block is a container
-	 * 
-	 * @param	material	material to check if container block
-	 * @return	{@code true} if material is a container material, {@code false} if not
+	 *
+	 * @param	block block to check if container
+	 * @return	{@code true} if block is a container, {@code false} if not
 	 */
-	private boolean isContainerBlock(Material material) {
-		return CONTAINER_MATERIALS.contains(material);
+	private boolean isContainerBlock(Block block) {
+		return block.getState() instanceof Container;
 	}
+
 
 	/** check if block is blacklisted
 	 * 
@@ -375,9 +390,10 @@ class EventListener implements Listener {
 		return blacklist.contains(material.toString());
 	}
 	
+
 	/** check if world is in disabled list
 	 * 
-	 * @param	worldname	name of world to check in list
+	 * @param worldname name of world to check in list
 	 * @return	boolean
 	 */
 	private boolean worldDisabled(String worldname) {

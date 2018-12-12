@@ -3,10 +3,21 @@
 # localized language support
 language: en-US
 
-# worlds where ALL checks are skipped
+# enabled worlds list
+# if this list is empty, all worlds will be added to the enabled worlds list
+# otherwise, only listed worlds will be added to the enabled worlds list
+
+enabled-worlds:
+#  - enabled_world1
+#  - enabled_world2
+
+
+# disabled worlds list
+# these worlds will be removed from the enabled worlds list created by the previous setting
+
 disabled-worlds:
-  - disabled-world
-  - another-disabled-world
+  - disabled_world1
+  - disabled_world2
   
 # world specific settings
 # note that all settings default to true, so you only need world specific settings that are false
