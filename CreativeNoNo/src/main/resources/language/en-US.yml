@@ -1,29 +1,36 @@
 # Custom Messages
 #
 # Variable substitutions:
-# %itemmaterial%        Item material
-# %playername%          Player's name
-# %playernickname%      Player's nickname
-# %playerdisplayname%   Player's display name, including prefix/suffix
-# %worldname%           World name that player is in
+# %MATERIAL%            Item or block material
+# %PLAYER_NAME%         Player's name
+# %WORLD_NAME%          World name that player is in
 
-messages:
-  blacklist:
+MESSAGES:
+  BLACKLIST:
     enabled: true
-    string: "&bYou are not allowed to place %itemmaterial% in creative mode."
-  layer-zero-protect:
+    string: "&bYou are not allowed to place %MATERIAL% in creative mode."
+
+  LAYER_ZERO_PROTECT:
     enabled: true
     string: "&bYou are not allowed to break blocks at layer 0!"
-  prevent-drops:
+
+  PREVENT_DROPS:
     enabled: true
     string: "&bYou cannot drop items in creative mode. Drag to inventory to remove."
-  destroy-on-drop:
+
+  DESTROY_ON_DROP:
     enabled: true
     string: "&bYou cannot drop items in creative mode. Item Destroyed."
-  prevent-pickup:
+
+  PREVENT_PICKUP:
     enabled: true
+    repeat-delay: 20
     string: "&bYou cannot pick up items in creative mode."
-  prevent-container-access:
+
+  PREVENT_CONTAINER_ACCESS:
     enabled: true
     string: "&bYou cannot access containers in creative mode."
 
+  PREVENT_SPAWN_EGGS:
+    enabled: true
+    string: "&bYou are not allowed to use spawn eggs here."

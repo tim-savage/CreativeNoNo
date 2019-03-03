@@ -1,7 +1,9 @@
-name: CreativeNoNo
-main: com.winterhaven_mc.creativenono.CreativeNoNoMain
-author: Tim Savage
-version: 1.0-beta
+name: ${project.name}
+main: com.winterhaven_mc.creativenono.PluginMain
+author: ${project.author}
+version: ${project.version}
+api-version: 1.13
+softdepend: [Multiverse-Core]
 
 commands:
    nono:
